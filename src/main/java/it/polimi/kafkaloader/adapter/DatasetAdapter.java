@@ -1,13 +1,15 @@
 package it.polimi.kafkaloader.adapter;
 
 import it.polimi.kafkaloader.adapter.util.DirectoryComparator;
-import it.polimi.kafkaloader.deserializer.EventFile;
 import it.polimi.kafkaloader.domain.Event;
 import it.polimi.kafkaloader.port.InputPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.PriorityQueue;
 
@@ -36,13 +38,20 @@ public class DatasetAdapter implements InputPort {
     }
 
     @Override
-    public Event next() {
+    public Event next() throws IOException {
         if (this.files.isEmpty()) {
             File directory = this.directories.poll();
             File[] files = directory.listFiles(File::isFile);
             this.files.addAll(Arrays.asList(files));
         }
-        EventFile eventFile = new EventFile(this.files.poll());
-        return eventFile.getEvent();
+
+        return deserialize(this.files.poll());
+    }
+
+    private static Event deserialize(File file) throws IOException {
+        String timestamp = file.getParentFile().getName();
+        String body = Files.readString(file.toPath());
+
+        return new Event(Instant.ofEpochSecond(Long.valueOf(timestamp)), body);
     }
 }

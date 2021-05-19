@@ -3,6 +3,8 @@ package it.polimi.kafkaloader.service;
 import it.polimi.kafkaloader.port.InputPort;
 import it.polimi.kafkaloader.port.OutputPort;
 
+import java.io.IOException;
+
 public class ForwardingService {
     private InputPort input;
     private OutputPort output;
@@ -12,7 +14,7 @@ public class ForwardingService {
         this.output = output;
     }
 
-    public void run() {
+    public void run() throws IOException {
         while (this.input.hasNext()) {
             this.output.publish(this.input.next());
         }

@@ -1,7 +1,7 @@
 package it.polimi.kafkaloader.adapter;
 
-import it.polimi.srbench.domain.Event;
-import it.polimi.srbench.port.OutputPort;
+import it.polimi.kafkaloader.domain.Event;
+import it.polimi.kafkaloader.port.OutputPort;
 
 public class ConsoleAdapter implements OutputPort {
     @Override

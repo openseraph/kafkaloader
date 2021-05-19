@@ -6,26 +6,43 @@ import it.polimi.kafkaloader.service.ForwardingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class KafkaLoader {
+import java.io.IOException;
+import java.util.Objects;
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaLoader.class);
+public class App {
+
+    private static final Logger logger = LoggerFactory.getLogger(App.class);
 
     public static void main(String[] args) {
 
-        final String BOOTSTRAP_SERVER = System.getenv("BOOTSTRAP_SERVER");
-        final String TOPIC = System.getenv("TOPIC");
+        final String KAFKA_BOOTSTRAP_SERVER = System.getenv("KAFKA_BOOTSTRAP_SERVER");
+        final String KAFKA_TOPIC = System.getenv("KAFKA_TOPIC");
         final String INPUT_FOLDER = System.getenv("INPUT_FOLDER");
 
-        logger.info("BOOTSTRAP_SERVER: " + BOOTSTRAP_SERVER);
-        logger.info("TOPIC: " + TOPIC);
+        try {
+            Objects.requireNonNull(KAFKA_BOOTSTRAP_SERVER, "Please set KAFKA_BOOTSTRAP_SERVER env variable.");
+            Objects.requireNonNull(KAFKA_TOPIC, "Please set KAFKA_TOPIC env variable.");
+            Objects.requireNonNull(INPUT_FOLDER, "Please set INPUT_FOLDER env variable.");
+        } catch (NullPointerException e) {
+            logger.error(e.getMessage());
+            System.exit(1);
+        }
+
+        logger.info("KAFKA_BOOTSTRAP_SERVER: " + KAFKA_BOOTSTRAP_SERVER);
+        logger.info("KAFKA_TOPIC: " + KAFKA_TOPIC);
         logger.info("INPUT_FOLDER: " + INPUT_FOLDER);
 
         DatasetAdapter datasetAdapter = new DatasetAdapter(INPUT_FOLDER);
-        KafkaAdapter kafkaAdapter = new KafkaAdapter(BOOTSTRAP_SERVER, TOPIC);
+        KafkaAdapter kafkaAdapter = new KafkaAdapter(KAFKA_BOOTSTRAP_SERVER, KAFKA_TOPIC);
 
         ForwardingService forwardingService = new ForwardingService(datasetAdapter, kafkaAdapter);
 
-        forwardingService.run();
+        try {
+            forwardingService.run();
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            System.exit(1);
+        }
 
         logger.info("Done!");
     }

@@ -23,6 +23,7 @@ public class App {
             Objects.requireNonNull(KAFKA_BOOTSTRAP_SERVER, "Please set KAFKA_BOOTSTRAP_SERVER env variable.");
             Objects.requireNonNull(KAFKA_TOPIC, "Please set KAFKA_TOPIC env variable.");
             Objects.requireNonNull(INPUT_FOLDER, "Please set INPUT_FOLDER env variable.");
+
         } catch (NullPointerException e) {
             logger.error(e.getMessage());
             System.exit(1);
@@ -31,6 +32,7 @@ public class App {
         logger.info("KAFKA_BOOTSTRAP_SERVER: " + KAFKA_BOOTSTRAP_SERVER);
         logger.info("KAFKA_TOPIC: " + KAFKA_TOPIC);
         logger.info("INPUT_FOLDER: " + INPUT_FOLDER);
+
 
         DatasetAdapter datasetAdapter = new DatasetAdapter(INPUT_FOLDER);
         KafkaAdapter kafkaAdapter = new KafkaAdapter(KAFKA_BOOTSTRAP_SERVER, KAFKA_TOPIC);

@@ -1,9 +1,11 @@
 package it.polimi.kafkaloader.service;
 
+import it.polimi.kafkaloader.domain.Event;
 import it.polimi.kafkaloader.port.InputPort;
 import it.polimi.kafkaloader.port.OutputPort;
 
 import java.io.IOException;
+import java.util.List;
 
 public class ForwardingService {
     private InputPort input;
@@ -16,7 +18,10 @@ public class ForwardingService {
 
     public void run() throws IOException {
         while (this.input.hasNext()) {
-            this.output.publish(this.input.next());
+            List<Event> events = this.input.next();
+            for (Event event : events) {
+                this.output.publish(event);
+            }
         }
     }
 }

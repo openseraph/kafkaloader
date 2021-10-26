@@ -1,8 +1,9 @@
 package it.polimi.kafkaloader.adapter;
 
-import it.polimi.kafkaloader.adapter.util.DirectoryComparator;
+import it.polimi.kafkaloader.adapter.util.FileComparator;
 import it.polimi.kafkaloader.domain.Event;
 import it.polimi.kafkaloader.port.InputPort;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,7 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class DatasetAdapter implements InputPort {
@@ -19,39 +22,33 @@ public class DatasetAdapter implements InputPort {
 
     private File inputFolder;
 
-    private PriorityQueue<File> directories;
     private PriorityQueue<File> files;
 
     public DatasetAdapter(String inputFolder) {
         this.inputFolder = new File(inputFolder);
 
-        File[] directories = this.inputFolder.listFiles(File::isDirectory);
-        this.directories = new PriorityQueue<>(1, new DirectoryComparator());
-        this.directories.addAll(Arrays.asList(directories));
-
-        this.files = new PriorityQueue<>();
+        File[] files = this.inputFolder.listFiles(File::isFile);
+        this.files = new PriorityQueue<>(1, new FileComparator());
+        this.files.addAll(Arrays.asList(files));
     }
 
     @Override
     public boolean hasNext() {
-        return !(this.files.isEmpty() && this.directories.isEmpty());
+        return !(this.files.isEmpty());
     }
 
     @Override
-    public Event next() throws IOException {
-        if (this.files.isEmpty()) {
-            File directory = this.directories.poll();
-            File[] files = directory.listFiles(File::isFile);
-            this.files.addAll(Arrays.asList(files));
-        }
-
+    public List<Event> next() throws IOException {
         return deserialize(this.files.poll());
     }
 
-    private static Event deserialize(File file) throws IOException {
-        String timestamp = file.getParentFile().getName();
-        String body = Files.readString(file.toPath());
-
-        return new Event(Instant.ofEpochSecond(Long.valueOf(timestamp)), body);
+    private static List<Event> deserialize(File file) throws IOException {
+        String timestamp = FilenameUtils.removeExtension(file.getName());
+        String[] bodies = Files.readString(file.toPath()).split("\n");
+        ArrayList<Event> events = new ArrayList<Event>();
+        for (String body: bodies) {
+            events.add(new Event(Instant.ofEpochMilli(Long.valueOf(timestamp)), body));
+        }
+        return events;
     }
 }
